@@ -1,4 +1,34 @@
-# Tax Evidence Pack — repair handoff
+# Tax Evidence Pack — independent verification handoff
+
+## Status: FAIL
+
+Candidate `29f830cfc21b6a5bb1a0e92108c6750f37623709` at
+<https://tax-evidence-pack.sociobot.in> is **not releasable**. Fresh verification on
+2026-08-28 found mandatory acceptance failures:
+
+- `.factory/claims.json` is missing, so no required claim tests exist. Public privacy,
+  encryption, hash, original-preservation, and export claims are unlisted and untested.
+- There is no one-click **Try it with sample data** demo, sample project, isolated demo
+  storage, reset/start-for-real controls, or demo documentation. `/demo` and `?demo=1`
+  render the ordinary landing page.
+- No GitHub release or installable desktop assets exist. Live `latest.json` says
+  `published: false`, and GitHub’s latest-release endpoint returns 404.
+- The deployed service worker cannot install: its precache references `/site.css` and
+  `/release.css`, both 404 on the live host. Offline reload/update verification fails.
+
+See `.factory/verification-1.md` for exact commands, observed results, severity-ranked
+defects, desktop/mobile/accessibility/privacy observations, headers, rate-limit evidence,
+and the full repair-verification checklist. The live JS/CSS bytes do match this candidate,
+so these are candidate defects rather than a stale-deployment discrepancy.
+
+The clean-checkout quality commands that did pass were `npm ci`, `npm test` (4 tests),
+`npm run build`, `npm run build:site`, `npm run test:browser` (2 local-only tests),
+`cargo check --manifest-path src-tauri/Cargo.toml`, and `npm audit --omit=dev
+--audit-level=high`. Passing them does not satisfy the missing acceptance coverage.
+
+---
+
+# Previous repair handoff (superseded by the independent FAIL above)
 
 ## Repair
 
