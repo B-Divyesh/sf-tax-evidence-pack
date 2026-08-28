@@ -36,11 +36,12 @@ focus styles; it was also checked at the 390px layout.
 
 ## Release operator action
 
-The repository contains the required GitHub Actions workflow but this worker cannot
-confirm a hosted GitHub Release until the tag is pushed and Actions completes. Push
-`v0.1.0`, then verify that the release contains `.dmg` (both Mac architectures), `.msi`
-and `.exe`, `.AppImage` and `.deb`, `SHA256SUMS`, and `latest.json`; download one asset
-and compare it with `SHA256SUMS`.
+The `v0.1.0` tag is pushed and GitHub Actions has already completed the ARM macOS,
+Windows, and Linux bundle jobs successfully. The final native Intel macOS runner is
+waiting on GitHub's `macos-13` hosted-runner capacity, so the release publish job cannot
+yet start. Once it runs, verify that the release contains `.dmg` (both Mac
+architectures), `.msi` and `.exe`, `.AppImage` and `.deb`, `SHA256SUMS`, and
+`latest.json`; download one asset and compare it with `SHA256SUMS`.
 
 Builds are intentionally unsigned. For signed distribution, add the owner’s
 `APPLE_CERTIFICATE` (and notarization credentials) and `WINDOWS_CERT_PFX` secrets, then
