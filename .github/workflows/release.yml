@@ -14,7 +14,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: macos-13
+          # macOS 14 can cross-build the Intel target and avoids the unavailable
+          # macos-13 hosted-runner queue for public repositories.
+          - os: macos-14
             target: x86_64-apple-darwin
             label: macos-x64
           - os: macos-14
