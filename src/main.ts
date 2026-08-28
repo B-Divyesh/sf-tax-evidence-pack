@@ -57,7 +57,10 @@ function bindApp() {
 
 async function addEvidence() {
   if (!isDesktop) return setToast('Open the installed app to add encrypted files.');
-  try { await invoke('import_files', { taxYear: selectedYear }); await refresh(); setToast('Evidence added and fingerprinted.'); }
+  const category = prompt('Category for these files (for example: Travel)', 'Uncategorized');
+  if (category === null) return;
+  const transactionRef = prompt('Transaction reference for these files (optional)', '') || '';
+  try { await invoke('import_files', { taxYear: selectedYear, category, transactionRef }); await refresh(); setToast('Evidence added and fingerprinted.'); }
   catch (error) { setToast(`Could not add evidence: ${String(error)}`); }
 }
 async function exportPack() {
