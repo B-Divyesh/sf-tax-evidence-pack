@@ -58,10 +58,26 @@ jobs:
       - name: Create checksums and manifest
         shell: bash
         run: |
-          set -euo pipefail; cd artifacts; find . -type f -print0 | xargs -0 sha256sum > SHA256SUMS
-          mac=$(find . -iname '*.dmg' | head -1); win=$(find . -iname '*.msi' | head -1); linux=$(find . -iname '*.AppImage' | head -1)
-          url(){ printf 'https://github.com/%s/%s/releases/download/%s/%s' "$GITHUB_REPOSITORY_OWNER" "${GITHUB_REPOSITORY#*/}" "$GITHUB_REF_NAME" "$(basename "$1")"; }; sha(){ sha256sum "$1"|awk '{print $1}'; }
-          printf '{"version":"%s","platforms":{"macos":{"url":"%s","sha256":"%s"},"windows":{"url":"%s","sha256":"%s"},"linux":{"url":"%s","sha256":"%s"}}}\n' "${GITHUB_REF_NAME#v}" "$(url "$mac")" "$(sha "$mac")" "$(url "$win")" "$(sha "$win")" "$(url "$linux")" "$(sha "$linux")" > latest.json
+          set -euo pipefail
+          cd artifacts
+          find . -type f -print0 | xargs -0 sha256sum > SHA256SUMS
+          node <<'NODE'
+          const { readdirSync, readFileSync, writeFileSync } = require('node:fs');
+          const { join, basename } = require('node:path');
+          const root = '.';
+          const files = [];
+          const walk = (dir) => readdirSync(dir, { withFileTypes: true }).forEach((entry) => entry.isDirectory() ? walk(join(dir, entry.name)) : files.push(join(dir, entry.name)));
+          walk(root);
+          const sums = new Map(readFileSync('SHA256SUMS', 'utf8').trim().split('\n').map((line) => { const [sha, path] = line.split(/\s+\*?/); return [basename(path), sha]; }));
+          const repo = process.env.GITHUB_REPOSITORY;
+          const tag = process.env.GITHUB_REF_NAME;
+          const url = (name) => `https://github.com/${repo}/releases/download/${tag}/${encodeURIComponent(name)}`;
+          const platform = (name) => name.endsWith('.dmg') ? 'macos' : /\.(msi|exe)$/i.test(name) ? 'windows' : /\.(AppImage|deb)$/i.test(name) ? 'linux' : null;
+          const platforms = { macos: { label: 'macOS', signed: false, artifacts: [] }, windows: { label: 'Windows', signed: false, artifacts: [] }, linux: { label: 'Linux', signed: false, artifacts: [] } };
+          for (const file of files) { const name = basename(file); const key = platform(name); if (!key) continue; const signature = files.find((candidate) => basename(candidate) === `${name}.sig` || basename(candidate) === `${name}.minisig`); platforms[key].artifacts.push({ name, url: url(name), sha256: sums.get(name) ?? null, signature: signature ? url(basename(signature)) : null, signed: Boolean(signature) }); }
+          for (const [key, entry] of Object.entries(platforms)) { const preferred = entry.artifacts.find((asset) => key === 'macos' ? /aarch64|arm64/i.test(asset.name) : key === 'windows' ? asset.name.endsWith('.msi') : asset.name.endsWith('.AppImage')) ?? entry.artifacts[0]; if (preferred) Object.assign(entry, preferred); }
+          writeFileSync('latest.json', `${JSON.stringify({ schema: 1, published: true, version: tag.replace(/^v/, ''), release_url: `https://github.com/${repo}/releases/tag/${tag}`, generated_at: new Date().toISOString(), platforms }, null, 2)}\n`);
+          NODE
       - uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true

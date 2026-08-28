@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "published": true,
+  "version": "2.4.0",
+  "release_url": "https://github.com/B-Divyesh/sf-tax-evidence-pack/releases/tag/v2.4.0",
+  "platforms": {
+    "macos": { "url": "https://github.com/B-Divyesh/sf-tax-evidence-pack/releases/download/v2.4.0/Tax-Evidence-Pack-arm64.dmg", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "signed": false, "artifacts": [{ "name": "Tax-Evidence-Pack-arm64.dmg", "url": "https://github.com/B-Divyesh/sf-tax-evidence-pack/releases/download/v2.4.0/Tax-Evidence-Pack-arm64.dmg", "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", "signed": false }] },
+    "windows": { "url": "https://github.com/B-Divyesh/sf-tax-evidence-pack/releases/download/v2.4.0/Tax-Evidence-Pack.msi", "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "signed": false, "artifacts": [{ "name": "Tax-Evidence-Pack.msi", "url": "https://github.com/B-Divyesh/sf-tax-evidence-pack/releases/download/v2.4.0/Tax-Evidence-Pack.msi", "sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", "signed": false }] },
+    "linux": { "url": "https://github.com/B-Divyesh/sf-tax-evidence-pack/releases/download/v2.4.0/Tax-Evidence-Pack.AppImage", "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "signed": false, "artifacts": [{ "name": "Tax-Evidence-Pack.AppImage", "url": "https://github.com/B-Divyesh/sf-tax-evidence-pack/releases/download/v2.4.0/Tax-Evidence-Pack.AppImage", "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", "signed": false }, { "name": "Tax-Evidence-Pack.deb", "url": "https://github.com/B-Divyesh/sf-tax-evidence-pack/releases/download/v2.4.0/Tax-Evidence-Pack.deb", "sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd", "signed": false }] }
+  }
+}

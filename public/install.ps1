@@ -1,5 +1,5 @@
 $ErrorActionPreference = 'Stop'
-$base = 'https://github.com/B-Divyesh/sf-tax-evidence-pack/releases/latest/download'
+$base = 'https://tax-evidence-pack.sociobot.in'
 $tmp = Join-Path $env:TEMP "tax-evidence-pack-$PID"; New-Item -ItemType Directory -Path $tmp | Out-Null
 Invoke-WebRequest "$base/latest.json" -OutFile "$tmp/latest.json"; $latest = Get-Content "$tmp/latest.json" | ConvertFrom-Json; $asset = $latest.platforms.windows
 $file = Join-Path $tmp ([IO.Path]::GetFileName($asset.url)); Invoke-WebRequest $asset.url -OutFile $file

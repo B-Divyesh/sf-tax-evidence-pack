@@ -1,58 +1,59 @@
-# Tax Evidence Pack — handoff
+# Tax Evidence Pack — repair handoff
 
-## What shipped
+## Repair
 
-- Tauri 2 desktop app with an encrypted local vault: AES-256-GCM encrypted originals
-  and encrypted register metadata, passphrase-derived with PBKDF2-SHA256 (600,000
-  iterations), no cloud upload and no telemetry.
-- Import receipts/invoices/PDFs, assign tax year, category and transaction reference,
-  record a missing-evidence marker, filter the register, and remove records with a
-  specific confirmation.
-- SHA-256 fingerprinting and a review export: a generated PDF index plus untouched,
-  decrypted originals in a ZIP.
-- Static product site in `dist/site` with OS-aware release lookup, privacy and terms,
-  Service Worker shell cache, license restore/verification against Sociobot’s billing
-  API, and checksummed `/install.sh` and `/install.ps1` installers.
-- Tauri release workflow for x64/arm64 macOS, Windows, and Linux. It emits standard
-  bundles, `SHA256SUMS`, and a `latest.json` release manifest.
-- Product-specific dithered/halftone print system documented in `.factory/design.md`.
-  The original generated binder asset is `assets/src/evidence-binder.png`; the shipped
-  WebP is 104 KB. Prompt, date, model route and disclosure are recorded in that file.
+The deployed candidate at `cc32761e20b56af583e42d981baad20bda8f2cb6` made a browser
+`fetch()` request to GitHub's `releases/latest/download/latest.json` redirect. Chromium
+reproduced the production failure on 2026-08-28:
+
+```text
+Access to fetch at 'https://github.com/B-Divyesh/sf-tax-evidence-pack/releases/latest/download/latest.json'
+from origin 'https://tax-evidence-pack.sociobot.in' has been blocked by CORS policy.
+```
+
+`npm run build:site` now creates `dist/site/latest.json` using the GitHub Releases API
+at build time. The browser only fetches the same-origin `/latest.json`; when there is
+no release, rate limit, or network access during the build, the deployed manifest is a
+valid unpublished state and the UI calmly links to the Releases page. There is no
+browser-side GitHub metadata request or uncaught error.
+
+The manifest carries the release version, direct asset links, SHA-256 values, signature
+URLs/status, and all `.dmg`, `.msi`, `.exe`, `.AppImage`, and `.deb` artifacts. The
+release workflow now emits this fuller schema alongside `SHA256SUMS`; the site and both
+one-line installers read the same-origin manifest before navigating/downloading the
+GitHub asset. The service worker is versioned to v2 and caches the manifest and runtime
+same-origin shell for a subsequent offline load.
 
 ## Verification
 
 ```sh
-npm test                         # 3 tests passing
-npm run build                    # app → dist/app
-npm run build:site               # landing → dist/site
-cargo check --manifest-path src-tauri/Cargo.toml
+npm ci && npm test && npm run build:site  # exact work-order command: 4 unit/integration tests passed
+npm run test:browser                      # 2 Playwright tests passed
+npm run build                             # Tauri web build passed
+cargo check --manifest-path src-tauri/Cargo.toml  # passed
 ```
 
-Lighthouse mobile on the built site: Performance **100**, Accessibility **100**, LCP
-**1.66 s**, CLS **0**. `npx @axe-core/cli http://127.0.0.1:4173/` found **0
-violations**. Initial JavaScript is 4 KB (gzip), CSS is 8 KB (gzip), and the LCP image
-is 104 KB. The static page has title/lang/main/one h1/alt text and keyboard-visible
-focus styles; it was also checked at the 390px layout.
+Focused coverage includes a mock GitHub release API integration test that verifies every
+platform artifact, checksum, and signature URL is kept; a Chromium cold-load regression
+test that permits only a same-origin manifest request and records zero console/page
+errors; mobile viewport, keyboard skip-link, service-worker update/offline reload, and
+privacy/no-third-party-request assertions. The browser suite also runs axe and reports
+zero serious or critical violations.
 
-## Release operator action
+`verify-url.sh` against the built local static site reported `200`, zero browser errors,
+title/lang/one h1/main/alt text all present, and 636 ms load time. The built initial JS
+is 1.69 KB gzip, CSS is 2.17 KB gzip, and the hero image remains 104 KB.
 
-The `v0.1.0` tag is pushed and GitHub Actions has already completed the ARM macOS,
-Windows, and Linux bundle jobs successfully. The final native Intel macOS runner is
-waiting on GitHub's `macos-13` hosted-runner capacity, so the release publish job cannot
-yet start. Once it runs, verify that the release contains `.dmg` (both Mac
-architectures), `.msi` and `.exe`, `.AppImage` and `.deb`, `SHA256SUMS`, and
-`latest.json`; download one asset and compare it with `SHA256SUMS`.
+## Release and operator action
 
-Builds are intentionally unsigned. For signed distribution, add the owner’s
-`APPLE_CERTIFICATE` (and notarization credentials) and `WINDOWS_CERT_PFX` secrets, then
-extend the workflow with the organization’s signing/notarization steps. Until then,
-the site and README accurately disclose the macOS right-click → Open and Windows
-unsigned-publisher flows.
+Repair release `v0.1.1` is aligned across `package.json`, Cargo, and Tauri config. It
+will be built on GitHub Actions for macOS arm64/x64, Windows, and Linux. Builds remain
+intentionally unsigned: signing/notarization requires `APPLE_CERTIFICATE` (plus
+notarization credentials) and `WINDOWS_CERT_PFX`. No updater is shipped because the
+app does not check for updates.
 
-## Known gaps / next steps
+## Known scope
 
-- There is no OCR, bank sync, category auto-classification, tax calculation, or return
-  filing — all are deliberate non-goals from the brief.
-- The Plus checkout URL uses the slug only and needs the factory’s product registration
-  before a live purchase can succeed.
-- Passphrases cannot be recovered; users should retain an external backup of the vault.
+There is deliberately no cloud sync, OCR, bank connection, tax calculation, or tax
+filing. The Plus checkout needs the factory product registration before a real purchase
+can succeed. Vault passphrases cannot be recovered; users need an external backup.

@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 set -eu
-repo="B-Divyesh/sf-tax-evidence-pack"; base="https://github.com/$repo/releases/latest/download"
+base="https://tax-evidence-pack.sociobot.in"
 case "$(uname -s)" in Darwin) key="macos";; Linux) key="linux";; *) echo "Tax Evidence Pack supports macOS and Linux from this installer." >&2; exit 1;; esac
 tmp="${TMPDIR:-/tmp}/tax-evidence-pack-$$"; mkdir -p "$tmp"; trap 'rm -rf "$tmp"' EXIT
 curl -fsSL "$base/latest.json" -o "$tmp/latest.json"

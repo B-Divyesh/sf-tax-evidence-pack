@@ -22,8 +22,11 @@ check the tax-record rules relevant to you.
 
 ## Install and release
 
-The landing site detects the OS and reads the latest GitHub Release manifest. Release
-builds run from `.github/workflows/release.yml` on a `v*` tag. Builds are unsigned:
+The landing site detects the OS and reads a same-origin `/latest.json` generated during
+`npm run build:site`; the build reads GitHub's release API server-side, so no browser
+request is made to GitHub's non-CORS release-download redirect. Release builds run from
+`.github/workflows/release.yml` on a `v*` tag and publish the same full manifest,
+including every platform asset, SHA-256 hash, and available signature URL. Builds are unsigned:
 macOS users should right-click → Open initially; Windows users should verify the
 published checksum before approving the publisher warning. One-line installers are at
 `/install.sh` and `/install.ps1` on the deployed landing site.

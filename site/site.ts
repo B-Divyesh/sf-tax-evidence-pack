@@ -1,4 +1,7 @@
-type Release = { version: string; platforms: Record<string, { url: string; sha256?: string }> };
+type ReleaseAsset = { name: string; url: string; sha256?: string; signature?: string | null; signed?: boolean };
+type ReleasePlatform = { label?: string; url?: string; sha256?: string; signature?: string | null; signed?: boolean; artifacts?: ReleaseAsset[] };
+type Release = { version?: string; published?: boolean; release_url?: string; platforms?: Record<string, ReleasePlatform> };
+
 const slug = 'tax-evidence-pack';
 const key = `sb_license:${slug}`;
 const api = 'https://api.sociobot.in/api/v1/products/tax-evidence-pack';
@@ -14,9 +17,51 @@ async function verifyLicense(token: string) {
   status.textContent = 'Checking license…';
   try { const response = await fetch(`${api}/verify?license=${encodeURIComponent(token)}`); const verdict = await response.json(); localStorage.setItem(`${key}:verdict`, JSON.stringify({ ...verdict, time: Date.now() })); status.textContent = verdict.valid ? 'Plus license active.' : 'License no longer active — you can purchase a new one below.'; if (!verdict.valid) localStorage.removeItem(key); } catch { status.textContent = 'License saved. Verification will resume when you are online.'; }
 }
+
 function platform() { const ua = navigator.userAgent.toLowerCase(); if (ua.includes('win')) return 'windows'; if (ua.includes('mac')) return 'macos'; return 'linux'; }
-async function release() { const button = el<HTMLAnchorElement>('download-button'); const copy = el<HTMLParagraphElement>('download-copy'); try { const response = await fetch('https://github.com/B-Divyesh/sf-tax-evidence-pack/releases/latest/download/latest.json', { cache: 'no-store' }); if (!response.ok) throw new Error('not released'); const latest = await response.json() as Release; const item = latest.platforms[platform()]; if (!item?.url) throw new Error('platform missing'); button.href = item.url; button.textContent = `Download ${latest.version} for ${platform() === 'macos' ? 'macOS' : platform() === 'windows' ? 'Windows' : 'Linux'}`; copy.textContent = item.sha256 ? `Latest ${latest.version}. SHA-256 is published with the release.` : `Latest ${latest.version}.`; } catch { copy.textContent = 'The first release is being prepared. Browse release assets for your platform.'; } }
-const incoming = new URLSearchParams(location.search).get('license'); if (incoming) { saveLicense(incoming); history.replaceState({}, '', location.pathname + location.hash); } else if (storedLicense()) verifyLicense(storedLicense()!);
+function platformName(name: string) { return name === 'macos' ? 'macOS' : name === 'windows' ? 'Windows' : 'Linux'; }
+
+function renderAssets(platforms: Record<string, ReleasePlatform>) {
+  const list = el<HTMLUListElement>('release-assets');
+  list.replaceChildren();
+  for (const [name, item] of Object.entries(platforms)) {
+    const artifacts = item.artifacts?.length ? item.artifacts : item.url ? [{ name: `${platformName(name)} installer`, url: item.url, sha256: item.sha256, signature: item.signature, signed: item.signed }] : [];
+    for (const asset of artifacts) {
+      const row = document.createElement('li');
+      const link = document.createElement('a');
+      link.href = asset.url; link.textContent = `${platformName(name)}: ${asset.name}`; link.rel = 'noopener';
+      const hash = document.createElement('code'); hash.textContent = asset.sha256 ? `SHA-256 ${asset.sha256}` : 'SHA-256 published in release notes';
+      const signing = document.createElement('span'); signing.className = 'release-signing'; signing.textContent = asset.signature ? 'Signature available' : asset.signed ? 'Signed' : 'Unsigned';
+      row.append(link, hash, signing); list.append(row);
+    }
+  }
+  list.hidden = !list.children.length;
+}
+
+async function release() {
+  const button = el<HTMLAnchorElement>('download-button');
+  const copy = el<HTMLParagraphElement>('download-copy');
+  const releasePage = button.href;
+  try {
+    // Same origin by design: GitHub's release-download redirect does not grant browser CORS.
+    const response = await fetch(new URL('/latest.json', location.origin), { cache: 'no-store' });
+    if (!response.ok) throw new Error('manifest unavailable');
+    const latest = await response.json() as Release;
+    const platforms = latest.platforms ?? {};
+    const item = platforms[platform()];
+    if (!latest.published || !latest.version || !item?.url) throw new Error('not published');
+    button.href = item.url;
+    button.textContent = `Download ${latest.version} for ${platformName(platform())}`;
+    copy.textContent = item.sha256 ? `Version ${latest.version} · SHA-256 verified in the release manifest.` : `Version ${latest.version}.`;
+    renderAssets(platforms);
+  } catch {
+    button.href = releasePage;
+    copy.textContent = 'Downloads are being published. Browse the release page for status.';
+  }
+}
+
+const incoming = new URLSearchParams(location.search).get('license');
+if (incoming) { saveLicense(incoming); history.replaceState({}, '', location.pathname + location.hash); } else if (storedLicense()) verifyLicense(storedLicense()!);
 el<HTMLButtonElement>('restore').addEventListener('click', () => { el<HTMLDivElement>('license-area').hidden = false; el<HTMLInputElement>('license-input').focus(); });
 el<HTMLButtonElement>('save-license').addEventListener('click', () => saveLicense(el<HTMLInputElement>('license-input').value));
 release();

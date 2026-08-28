@@ -1,13 +1,14 @@
 {
   "name": "tax-evidence-pack",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
-    "build:site": "vite build --config vite.site.config.ts",
-    "test": "vitest run",
+    "build:site": "vite build --config vite.site.config.ts && node scripts/generate-release-manifest.mjs dist/site/latest.json",
+    "test": "vitest run --exclude tests/browser/**",
+    "test:browser": "npm run build:site && playwright test",
     "test:watch": "vitest",
     "tauri": "tauri"
   },
@@ -15,8 +16,10 @@
     "@tauri-apps/api": "^2.9.1"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.11.0",
     "@tauri-apps/cli": "^2.9.5",
     "@types/node": "^24.0.0",
+    "@playwright/test": "1.58.2",
     "typescript": "^5.8.3",
     "vite": "^7.1.7",
     "vitest": "^3.2.4"
