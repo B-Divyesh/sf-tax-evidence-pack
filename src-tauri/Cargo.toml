@@ -1,6 +1,6 @@
 [package]
 name = "tax-evidence-pack"
-version = "0.1.6"
+version = "0.1.7"
 description = "A private local evidence binder for tax review"
 authors = ["Sociobot"]
 edition = "2021"

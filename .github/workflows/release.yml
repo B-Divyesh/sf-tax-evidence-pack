@@ -92,7 +92,7 @@ jobs:
           const files = [];
           const walk = (dir) => readdirSync(dir, { withFileTypes: true }).forEach((entry) => entry.isDirectory() ? walk(join(dir, entry.name)) : files.push(join(dir, entry.name)));
           walk('release-assets');
-          const sums = new Map(readFileSync('release-assets/SHA256SUMS', 'utf8').trim().split('\n').map((line) => { const [sha, path] = line.split(/\s+\*?/); return [basename(path), sha]; }));
+          const sums = new Map(readFileSync('release-assets/SHA256SUMS', 'utf8').trim().split('\n').map((line) => { const match = line.match(/^([a-fA-F0-9]{64})\s+\*?(.+)$/); if (!match) throw new Error(`Invalid SHA256SUMS line: ${line}`); return [basename(match[2]), match[1].toLowerCase()]; }));
           const repo = process.env.GITHUB_REPOSITORY;
           const tag = process.env.GITHUB_REF_NAME;
           const url = (name) => `https://github.com/${repo}/releases/download/${tag}/${encodeURIComponent(name)}`;
@@ -100,7 +100,7 @@ jobs:
           const platforms = { macos: { label: 'macOS', signed: false, artifacts: [] }, windows: { label: 'Windows', signed: false, artifacts: [] }, linux: { label: 'Linux', signed: false, artifacts: [] } };
           for (const file of files) { const name = basename(file); const key = platform(name); if (!key) continue; const signature = files.find((candidate) => basename(candidate) === `${name}.sig` || basename(candidate) === `${name}.minisig`); platforms[key].artifacts.push({ name, url: url(name), sha256: sums.get(name) ?? null, signature: signature ? url(basename(signature)) : null, signed: Boolean(signature) }); }
           for (const [key, entry] of Object.entries(platforms)) { const preferred = entry.artifacts.find((asset) => key === 'macos' ? /aarch64|arm64/i.test(asset.name) : key === 'windows' ? asset.name.endsWith('.msi') : asset.name.endsWith('.AppImage')) ?? entry.artifacts[0]; if (preferred) Object.assign(entry, preferred); }
-          if (platforms.macos.artifacts.length < 2 || !platforms.macos.artifacts.some((asset) => /aarch64|arm64/i.test(asset.name)) || !platforms.macos.artifacts.some((asset) => /x86_64|x64|intel/i.test(asset.name)) || !platforms.windows.artifacts.length || !platforms.linux.artifacts.length) throw new Error('A required desktop platform artifact is missing.');
+          if (platforms.macos.artifacts.length < 2 || !platforms.macos.artifacts.some((asset) => /aarch64|arm64/i.test(asset.name)) || !platforms.macos.artifacts.some((asset) => /x86_64|x64|intel/i.test(asset.name)) || !platforms.windows.artifacts.length || !platforms.linux.artifacts.length || Object.values(platforms).some((entry) => entry.artifacts.some((asset) => !asset.sha256))) throw new Error('A required desktop platform artifact or checksum is missing.');
           writeFileSync('release-assets/latest.json', `${JSON.stringify({ schema: 1, published: true, version: tag.replace(/^v/, ''), release_url: `https://github.com/${repo}/releases/tag/${tag}`, generated_at: new Date().toISOString(), platforms }, null, 2)}\n`);
           NODE
       - uses: softprops/action-gh-release@v2
