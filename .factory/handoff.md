@@ -1,98 +1,117 @@
-# Tax Evidence Pack — independent verification handoff
+# Tax Evidence Pack — repair handoff
 
-## Status: FAIL
+## Status: ready to release
 
-Candidate `29f830cfc21b6a5bb1a0e92108c6750f37623709` at
-<https://tax-evidence-pack.sociobot.in> is **not releasable**. Fresh verification on
-2026-08-28 found mandatory acceptance failures:
+**Implementation SHA:** `eef6d4a97e86e5d906e6cbd1ba4f2b1e28c19bb6` (tag `v0.1.7`).
+The documentation SHA is the commit that follows this handoff update.
 
-- `.factory/claims.json` is missing, so no required claim tests exist. Public privacy,
-  encryption, hash, original-preservation, and export claims are unlisted and untested.
-- There is no one-click **Try it with sample data** demo, sample project, isolated demo
-  storage, reset/start-for-real controls, or demo documentation. `/demo` and `?demo=1`
-  render the ordinary landing page.
-- No GitHub release or installable desktop assets exist. Live `latest.json` says
-  `published: false`, and GitHub’s latest-release endpoint returns 404.
-- The deployed service worker cannot install: its precache references `/site.css` and
-  `/release.css`, both 404 on the live host. Offline reload/update verification fails.
+Tax Evidence Pack is a private desktop binder for sole traders who need receipts,
+invoices, and reimbursement proof ready for an accountant. The first action is
+**Try it with sample data**. It opens a populated, isolated review binder.
 
-See `.factory/verification-1.md` for exact commands, observed results, severity-ranked
-defects, desktop/mobile/accessibility/privacy observations, headers, rate-limit evidence,
-and the full repair-verification checklist. The live JS/CSS bytes do match this candidate,
-so these are candidate defects rather than a stale-deployment discrepancy.
+## What changed
 
-The clean-checkout quality commands that did pass were `npm ci`, `npm test` (4 tests),
-`npm run build`, `npm run build:site`, `npm run test:browser` (2 local-only tests),
-`cargo check --manifest-path src-tauri/Cargo.toml`, and `npm audit --omit=dev
---audit-level=high`. Passing them does not satisfy the missing acceptance coverage.
+- Added `.factory/claims.json` with eight observable, tagged outcome tests.
+  They cover one-click sample data, demo isolation, ZIP export, offline reload,
+  release metadata, encryption, SHA-256 fingerprints, and original-byte export.
+- Added `/demo` and desktop **Load sample project**. The browser demo has five
+  realistic 2025 evidence records, a persistent sample banner, reset, start-for-real,
+  ZIP export, and a `demo:tax-evidence-pack:records` storage namespace. It never reads
+  or writes real binder keys.
+- Replaced the broken fixed service-worker list with a build-time generator that
+  precaches only emitted hashed assets. The live worker no longer requests the former
+  `/site.css` or `/release.css` 404 paths.
+- Added release workflow coverage for macOS ARM and Intel, Windows, and Linux.
+  The final workflow produces `.dmg`, `.msi`/`.exe`, `.AppImage`/`.deb`,
+  `SHA256SUMS`, and `latest.json`; it now fails before publishing if any installer
+  lacks a checksum. The Intel package uses GitHub's current `macos-15-intel` runner.
+- Fixed published checksum metadata for filenames with spaces, aligned package, Cargo,
+  Tauri, and site build versions, and made a build-time release token optional for
+  reliable site metadata generation without putting a token in the output.
+- Completed the site skeleton and small QA fixes: legal routes, titles/metadata,
+  real 404, CSP headers, sitemap/robots, touch targets, skip link, mobile first screen,
+  and a checksum-aware same-origin download manifest.
 
----
+## Current release and consumer check
 
-# Previous repair handoff (superseded by the independent FAIL above)
-
-## Repair
-
-The deployed candidate at `cc32761e20b56af583e42d981baad20bda8f2cb6` made a browser
-`fetch()` request to GitHub's `releases/latest/download/latest.json` redirect. Chromium
-reproduced the production failure on 2026-08-28:
-
-```text
-Access to fetch at 'https://github.com/B-Divyesh/sf-tax-evidence-pack/releases/latest/download/latest.json'
-from origin 'https://tax-evidence-pack.sociobot.in' has been blocked by CORS policy.
-```
-
-`npm run build:site` now creates `dist/site/latest.json` using the GitHub Releases API
-at build time. The browser only fetches the same-origin `/latest.json`; when there is
-no release, rate limit, or network access during the build, the deployed manifest is a
-valid unpublished state and the UI calmly links to the Releases page. There is no
-browser-side GitHub metadata request or uncaught error.
-
-The manifest carries the release version, direct asset links, SHA-256 values, signature
-URLs/status, and all `.dmg`, `.msi`, `.exe`, `.AppImage`, and `.deb` artifacts. The
-release workflow now emits this fuller schema alongside `SHA256SUMS`; the site and both
-one-line installers read the same-origin manifest before navigating/downloading the
-GitHub asset. The service worker is versioned to v2 and caches the manifest and runtime
-same-origin shell for a subsequent offline load.
+- Published release: [v0.1.7](https://github.com/B-Divyesh/sf-tax-evidence-pack/releases/tag/v0.1.7)
+- GitHub Actions: [run 34016064824](https://github.com/B-Divyesh/sf-tax-evidence-pack/actions/runs/34016064824)
+  — clean verification, macOS ARM, macOS Intel, Windows, Linux, and release jobs all passed.
+- `latest.json` is `published: true`, version `0.1.7`, contains macOS, Windows, and
+  Linux installers, and has a 64-character SHA-256 for every asset.
+- Downloaded `Tax Evidence Pack_0.1.7_amd64.deb`; its SHA-256 matched `SHA256SUMS`:
+  `c4e319994e010b50dc0dadc60e9c28d1eff316eba951a79c234eda795519c942`.
+  Extracted it into a fresh temporary consumer directory and launched the installed
+  desktop executable under an isolated X display; it remained running for 8 seconds.
 
 ## Verification
 
+From the final checkout:
+
 ```sh
-npm ci && npm test && npm run build:site  # exact work-order command: 4 unit/integration tests passed
-npm run test:browser                      # 2 Playwright tests passed
-npm run build                             # Tauri web build passed
-cargo check --manifest-path src-tauri/Cargo.toml  # passed
+npm ci
+npm test
+npm run build
+npm run build:site
+npm run test:browser
+cargo test --manifest-path src-tauri/Cargo.toml
+npm audit --omit=dev --audit-level=high
 ```
 
-Focused coverage includes a mock GitHub release API integration test that verifies every
-platform artifact, checksum, and signature URL is kept; a Chromium cold-load regression
-test that permits only a same-origin manifest request and records zero console/page
-errors; mobile viewport, keyboard skip-link, service-worker update/offline reload, and
-privacy/no-third-party-request assertions. The browser suite also runs axe and reports
-zero serious or critical violations.
+The clean GitHub run executed `npm ci`, `npm test`, `npm run build`,
+`npm run test:browser`, and `cargo test` before any package build. Locally, the full
+suite, build, Rust tests, browser suite, and audit passed on `v0.1.7`.
 
-`verify-url.sh` against the built local static site reported `200`, zero browser errors,
-title/lang/one h1/main/alt text all present, and 636 ms load time. Post-deploy
-`verify-url.sh https://tax-evidence-pack.sociobot.in` reported HTTPS `200`, **zero**
-console/page errors, title/lang/one h1/main/alt text all present, and 1288 ms load time.
-The live `/latest.json` is `200 application/json`, same-origin, and currently contains
-the valid `published: false` state because no GitHub Release exists yet. Mobile Lighthouse
-on the deployed URL scored **100 Performance**, **100 Accessibility**, LCP **1363.9 ms**,
-and CLS **0**. The built initial JS is 1.69 KB gzip, CSS is 2.17 KB gzip, and the hero
-image remains 104 KB.
+Every declared command in `.factory/claims.json` also passed individually on `v0.1.7`:
 
-## Release and operator action
+- `@claim:sample-data`, `@claim:demo-isolation`, `@claim:sample-export`,
+  `@claim:offline-demo`, and `@claim:release-manifest`
+- `@claim:encrypted-vault`, `@claim:sha256-fingerprint`, and
+  `@claim:original-file-export`
 
-Repair release `v0.1.1` is aligned across `package.json`, Cargo, and Tauri config and
-was pushed with the repair. Its GitHub Actions run is queued on hosted-runner capacity:
-<https://github.com/B-Divyesh/sf-tax-evidence-pack/actions/runs/33158727796>. Once it
-finishes, rerun `npm run build:site` and deploy `dist/site` to replace the fallback with
-the release's real same-origin manifest; then download one asset and compare its hash
-with `SHA256SUMS`. Builds remain intentionally unsigned: signing/notarization requires
-`APPLE_CERTIFICATE` (plus notarization credentials) and `WINDOWS_CERT_PFX`. No updater
-is shipped because the app does not check for updates.
+Fresh HTTPS checks at <https://tax-evidence-pack.sociobot.in> on 2026-09-06 found:
 
-## Known scope
+- `/`, `/demo`, `/demo/`, `/privacy`, `/terms`, `robots.txt`, `sitemap.xml`, and
+  `sw.js` return 200. The deliberate `/not-a-real-page` returns 404 with the designed
+  page.
+- The live `latest.json` is `v0.1.7`, published, and checksum-complete. The worker
+  lists only emitted assets and contains neither broken CSS precache path.
+- Fresh desktop and 390 px phone contexts showed the job, audience, and **Try it with
+  sample data** before scrolling. The button was visible above the fold; the phone had
+  no horizontal overflow.
+- The live demo showed its persistent sample banner, changed from five to six records,
+  reset to five, preserved a sentinel real-data key, and left no demo key after reset.
+  It made only same-origin requests.
+- A fresh service-worker context reloaded `/demo/` offline successfully. No live
+  console or page errors were observed. Axe found no serious or critical issue on the
+  landing page.
+- Lighthouse mobile: performance **96**, accessibility **100**, LCP **1774.6 ms**,
+  CLS **0**. Initial landing JavaScript is 1.49 KB gzip (plus 0.40 KB module preload),
+  CSS is 3.09 KB gzip, and the hero image is 104 KB.
 
-There is deliberately no cloud sync, OCR, bank connection, tax calculation, or tax
-filing. The Plus checkout needs the factory product registration before a real purchase
-can succeed. Vault passphrases cannot be recovered; users need an external backup.
+## Earlier verification findings
+
+| Earlier finding | Current disposition |
+| --- | --- |
+| Missing claims file and claim coverage | Fixed with eight tagged outcome claims and final individual runs. |
+| No sample demo or isolated storage | Fixed at `/demo` and in the desktop first-run screen; reset/isolation and export are tested live. |
+| No published desktop release | Fixed by published v0.1.7 artifacts for all required platforms; Linux artifact checksum and launch were checked. |
+| Service-worker CSS 404s | Fixed by emitted-asset precache generation; live worker inspection is clean and offline reload passes. |
+| Missing route/accessibility/mobile details | Fixed and checked by Playwright, Axe, fresh phone/desktop contexts, legal-route checks, and Lighthouse. |
+| GitHub CORS download failure | Fixed: browser fetches only same-origin `/latest.json`; installer navigation uses release asset URLs. |
+| Cached malformed license verdict recovery | Fixed with defensive cache parsing and restore guidance. |
+| Billing rate-limit evidence | The static repair does not change the billing endpoint; the earlier independent check recorded 30 accepted requests followed by 429 with `Retry-After`. Tenant isolation and persistence are not applicable because this product has no product backend. |
+
+## Known limits and operator action
+
+- **Billing registration remains an external dependency.** The $29 one-time Plus offer
+  and checkout link remain public; its required public metadata is at
+  `/work/.evidence/billing-offer.json`. Do not treat a checkout redirect as entitlement
+  until the separate billing-registration operator registers and verifies the offer.
+- Packages are intentionally unsigned. macOS signing/notarization needs
+  `APPLE_CERTIFICATE` plus notarization credentials; Windows signing needs
+  `WINDOWS_CERT_PFX`. No updater is shipped.
+- This product intentionally has no cloud sync, OCR, bank sync, tax calculation, or
+  tax filing. It is not tax advice or a guarantee of record-retention compliance.
+- Vault passphrases cannot be recovered. Users need their own backup of evidence files
+  and passphrase.
