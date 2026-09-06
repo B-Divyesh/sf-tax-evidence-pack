@@ -1,12 +1,12 @@
 {
   "name": "tax-evidence-pack",
   "private": true,
-  "version": "0.1.1",
+  "version": "0.1.2",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
-    "build:site": "vite build --config vite.site.config.ts && node scripts/generate-release-manifest.mjs dist/site/latest.json",
+    "build:site": "vite build --config vite.site.config.ts && node scripts/generate-site-assets.mjs dist/site && node scripts/generate-release-manifest.mjs dist/site/latest.json",
     "test": "vitest run --exclude tests/browser/**",
     "test:browser": "npm run build:site && playwright test",
     "test:watch": "vitest",

@@ -1,35 +1,63 @@
 # Tax Evidence Pack
 
-A private desktop evidence binder for sole traders. It keeps receipts, invoice PDFs
-and reimbursement proof alongside their tax-year context, preserves original files
-with SHA-256 fingerprints, flags missing support, and exports a PDF index plus
-original-file ZIP for review.
+Tax Evidence Pack is a private desktop binder for sole traders who need receipts,
+invoice PDFs, and reimbursement proof ready for an accountant. It keeps tax context
+with each document, marks missing support, and exports a PDF review index with the
+original files in a ZIP.
 
-## Run locally
+It is not tax advice, tax calculation software, a filing service, OCR, bank sync, or
+cloud backup. Keep a separate backup and check the record-retention rules that apply
+to you.
+
+## Try the sample
+
+Open `/demo` on the deployed site or choose **Try it with sample data**. The browser
+demo starts with five realistic 2025 records and runs only in the
+`demo:tax-evidence-pack:records` local-storage namespace. **Reset demo** removes that
+key. The desktop app also has **Load sample project** on its first-run screen; it is a
+read-only, in-memory preview.
+
+## Run and test
 
 ```sh
-npm install
-npm run dev          # browser layout preview
-npm run tauri dev    # installed-app workflow
+npm ci
+npm run dev                 # desktop UI preview
+npm run tauri dev           # desktop app
 npm test
-npm run build
-npm run build:site   # static landing site → dist/site
+npm run build               # dist/app
+npm run build:site          # dist/site
+npm run test:browser
+cargo test --manifest-path src-tauri/Cargo.toml
 ```
 
-The desktop vault uses a passphrase-derived AES-256-GCM key. There is no cloud sync,
-telemetry, OCR, bank connection, tax calculation, or filing. Keep your own backup and
-check the tax-record rules relevant to you.
+The Tauri tests on Linux need desktop development packages. On Ubuntu install:
 
-## Install and release
+```sh
+sudo apt-get update
+sudo apt-get install -y libglib2.0-dev libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev
+```
 
-The landing site detects the OS and reads a same-origin `/latest.json` generated during
-`npm run build:site`; the build reads GitHub's release API server-side, so no browser
-request is made to GitHub's non-CORS release-download redirect. Release builds run from
-`.github/workflows/release.yml` on a `v*` tag and publish the same full manifest,
-including every platform asset, SHA-256 hash, and available signature URL. Builds are unsigned:
-macOS users should right-click → Open initially; Windows users should verify the
-published checksum before approving the publisher warning. One-line installers are at
-`/install.sh` and `/install.ps1` on the deployed landing site.
+Every public, testable claim is listed in [`.factory/claims.json`](.factory/claims.json).
+Run each documented `test` command from a clean checkout. The browser claim tests use
+only the demo route and bundled sample data.
 
-Tax Evidence Pack Plus is a $29 one-time license sold by Sociobot/Dodo. It never gates
-core evidence export or access to existing data. See `/privacy` and `/terms`.
+## Release and deploy
+
+Tagging `v*` starts `.github/workflows/release.yml`. It runs the quality checks and
+builds unsigned macOS arm64/x64, Windows, and Linux artifacts. The workflow publishes
+the installers, `SHA256SUMS`, and `latest.json` to the GitHub Release. The landing-site
+build reads the latest release at build time and writes a same-origin `latest.json` to
+`dist/site`.
+
+Deploy only `dist/site` to the product static host. Its service worker is generated
+after Vite builds, so its precache list contains the actual hashed files. The site uses
+no analytics or third-party scripts. `/privacy` and `/terms` explain website license
+storage and the local desktop vault.
+
+Tax Evidence Pack Plus is an advertised $29 one-time Sociobot/Dodo license. It does
+not gate core data access or export. The public checkout needs the factory billing
+registration operator before purchases can be verified.
+
+## License
+
+MIT. See [LICENSE](LICENSE).

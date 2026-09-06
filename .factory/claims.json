@@ -1,0 +1,58 @@
+[
+  {
+    "id": "sample-data",
+    "claim": "Try it with sample data opens a populated evidence binder in one click.",
+    "where": "landing first screen, demo",
+    "test": "npm run test:browser -- --grep @claim:sample-data",
+    "sandbox": "fresh browser context; landing page; sample-demo route"
+  },
+  {
+    "id": "demo-isolation",
+    "claim": "Sample changes stay separate from a real binder and make no third-party requests.",
+    "where": "demo banner, privacy page",
+    "test": "npm run test:browser -- --grep @claim:demo-isolation",
+    "sandbox": "fresh browser context; sample-demo route; sentinel real-data key and request log"
+  },
+  {
+    "id": "sample-export",
+    "claim": "The sample export downloads a ZIP with a PDF index and sample original-file entries.",
+    "where": "demo output",
+    "test": "npm run test:browser -- --grep @claim:sample-export",
+    "sandbox": "fresh browser context; sample-demo route; inspect downloaded ZIP bytes and entries"
+  },
+  {
+    "id": "offline-demo",
+    "claim": "The sample demo reloads offline after its first visit.",
+    "where": "demo capability",
+    "test": "npm run test:browser -- --grep @claim:offline-demo",
+    "sandbox": "new browser context; sample-demo route; wait for service worker; set offline; reload"
+  },
+  {
+    "id": "release-manifest",
+    "claim": "The download page chooses a platform installer from a same-origin release manifest with a SHA-256 checksum.",
+    "where": "download section",
+    "test": "npm run test:browser -- --grep @claim:release-manifest",
+    "sandbox": "fresh browser context; fixture release manifest; inspect selected installer and requests"
+  },
+  {
+    "id": "encrypted-vault",
+    "claim": "The installed app encrypts vault bytes with the chosen passphrase.",
+    "where": "landing details, desktop first-run screen",
+    "test": "npm test -- -t @claim:encrypted-vault",
+    "sandbox": "fixed sample evidence and salt; assert ciphertext lacks plaintext, correct passphrase decrypts, and wrong passphrase fails"
+  },
+  {
+    "id": "sha256-fingerprint",
+    "claim": "The installed app creates a SHA-256 fingerprint for imported file bytes.",
+    "where": "landing first screen and details",
+    "test": "npm test -- -t @claim:sha256-fingerprint",
+    "sandbox": "fixed receipt bytes; compare the app hash algorithm output with the known SHA-256 digest"
+  },
+  {
+    "id": "original-file-export",
+    "claim": "The installed app exports a PDF index and original file bytes in a ZIP.",
+    "where": "landing workflow and details, README",
+    "test": "npm test -- -t @claim:original-file-export",
+    "sandbox": "fixed supported and missing sample records; open generated ZIP and compare the original bytes"
+  }
+]

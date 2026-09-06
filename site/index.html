@@ -1,25 +1,52 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="A private, encrypted binder for receipts, invoices and tax evidence." />
-  <title>Tax Evidence Pack — your evidence, ready to review</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Prepare receipts, invoices, and proof for an accountant in a private local desktop binder." />
+  <meta name="theme-color" content="#f5f0e5" />
+  <link rel="canonical" href="https://tax-evidence-pack.sociobot.in/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Tax Evidence Pack — prepare tax evidence" />
+  <meta property="og:description" content="Prepare receipts, invoices, and proof for an accountant in a private local desktop binder." />
+  <meta property="og:image" content="https://tax-evidence-pack.sociobot.in/evidence-pack-social.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Tax Evidence Pack — prepare tax evidence" />
+  <meta name="twitter:description" content="Prepare receipts, invoices, and proof for an accountant in a private local desktop binder." />
+  <meta name="twitter:image" content="https://tax-evidence-pack.sociobot.in/evidence-pack-social.png" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+  <title>Tax Evidence Pack — prepare tax evidence</title>
   <link rel="preload" href="/evidence-binder.webp" as="image" type="image/webp" fetchpriority="high" />
   <link rel="stylesheet" href="/site.css" />
-  <link rel="stylesheet" href="/release.css" />
+  <link rel="stylesheet" href="/mobile-home.css" />
 </head>
 <body>
   <a class="skip" href="#main">Skip to main content</a>
-  <header><a class="brand" href="/" aria-label="Tax Evidence Pack home"><span>▣</span> Tax Evidence <b>Pack</b></a><nav aria-label="Primary"><a href="#how">How it works</a><a href="#price">Price</a><a href="/privacy/">Privacy</a><a class="download top-download" href="#download">Download app</a></nav></header>
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="Tax Evidence Pack home"><span aria-hidden="true">▣</span> Tax Evidence <b>Pack</b></a>
+    <nav aria-label="Primary navigation"><a href="/demo/">Demo</a><a href="#how">How it works</a><a href="#price">Price</a><a href="/privacy/">Privacy</a></nav>
+  </header>
   <main id="main" tabindex="-1">
-    <section class="hero"><div class="hero-copy"><p class="eyebrow">Private desktop evidence binder</p><h1>Your evidence, ready to review.</h1><p class="lede">Turn a year of receipts, invoices and reimbursement proof into a reviewable pack — with the original files, their fingerprints and the transaction context together.</p><div class="hero-actions"><a class="button primary download" href="#download">Download for your device <span aria-hidden="true">↓</span></a><a class="button secondary" href="#how">See the workflow</a></div><p class="local-note">⌁ No cloud upload · Encrypted at rest · Your files stay yours</p></div><figure><img src="/evidence-binder.webp" width="1200" height="800" alt="Halftone illustration of an open evidence binder holding receipts and a verification stamp." decoding="async" fetchpriority="high" /><figcaption>Original generated illustration, made for Tax Evidence Pack.</figcaption></figure></section>
-    <section class="problem" aria-labelledby="problem-title"><p class="eyebrow">The last tax-prep step</p><h2 id="problem-title">Your ledger says what happened.<br />Your accountant still needs the evidence.</h2><p>Accounting subscriptions attach files inside their own workflow. Tax Evidence Pack is a small local binder that works beside any ledger: import originals, note their tax context, flag what is missing, and export one portable handover.</p></section>
-    <section id="how" class="steps" aria-labelledby="steps-title"><div><p class="eyebrow">A short, deliberate workflow</p><h2 id="steps-title">From paper trail to review pack.</h2></div><ol><li><span>01</span><h3>Place the original</h3><p>Drag in receipts, invoices, PDFs and reimbursement proof. Each is encrypted locally and SHA-256 fingerprinted.</p></li><li><span>02</span><h3>Give it context</h3><p>Tag the tax year, category and transaction reference. Create a visible missing-evidence marker where the document has not arrived.</p></li><li><span>03</span><h3>Hand it over cleanly</h3><p>Export a PDF review index plus untouched originals in one ZIP. Your accountant can review without your bookkeeping login.</p></li></ol></section>
-    <section class="details"><div class="detail-stamp">✓</div><div><p class="eyebrow">Not another accounting suite</p><h2>A quiet companion for the audit trail.</h2><ul><li><b>Private by design</b><span>Files and the register are encrypted at rest on your own device.</span></li><li><b>Originals preserved</b><span>Exports include the original file bytes and each record’s SHA-256 fingerprint.</span></li><li><b>Reviewable gaps</b><span>See missing support early, before a deadline makes the search painful.</span></li></ul></div></section>
-    <section id="price" class="pricing" aria-labelledby="price-title"><div><p class="eyebrow">One-time purchase</p><h2 id="price-title">Own your audit trail.</h2><p>The free desktop app is useful for a working binder. Tax Evidence Pack Plus is a one-time $29 unlock that supports ongoing development and includes future desktop updates. Core export, accessibility, and your existing data are never held hostage.</p></div><div class="price-card"><p>Tax Evidence Pack Plus</p><strong>$29 <small>once</small></strong><a class="button primary" id="buy-link" href="https://api.sociobot.in/api/v1/products/tax-evidence-pack/checkout">Buy Plus</a><button class="restore" id="restore">Have a license? Restore it</button><div id="license-area" hidden><label for="license-input">Paste your license token</label><input id="license-input" autocomplete="off" /><button class="button secondary" id="save-license">Restore purchase</button></div><p id="license-status" role="status" aria-live="polite"></p></div></section>
-    <section id="download" class="download-panel" aria-labelledby="download-title"><div><p class="eyebrow">Install in one step</p><h2 id="download-title">Get the local app.</h2><p id="download-copy">Checking the latest release…</p></div><div><a class="button primary" id="download-button" href="https://github.com/B-Divyesh/sf-tax-evidence-pack/releases" rel="noopener">View releases</a><ul id="release-assets" class="release-assets" aria-label="Release files" hidden></ul><p class="fine">Builds are currently unsigned. On macOS, right-click → Open the first time. On Windows, approve the publisher warning only after verifying the checksum.</p></div></section>
-    <section class="caveat"><p><b>Important:</b> Tax Evidence Pack organizes documents; it is not tax advice and does not guarantee compliant record retention in every jurisdiction. Keep backups and follow the rules that apply to you.</p></section>
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">Private desktop evidence binder</p>
+        <h1>Prepare your tax evidence pack</h1>
+        <p class="lede">For sole traders who need receipts, invoices and proof ready for an accountant.</p>
+        <div class="hero-actions"><a class="button primary" href="/demo/">Try it with sample data</a><span class="action-note">See a populated binder now.</span></div>
+        <ul class="plain-facts" aria-label="Key facts"><li>Private local desktop app</li><li>Original files and SHA-256 fingerprints</li><li>$29 one-time Plus; core export stays free</li></ul>
+      </div>
+      <figure><img src="/evidence-binder.webp" width="1200" height="800" alt="Halftone illustration of an open evidence binder holding receipts and a verification stamp." decoding="async" fetchpriority="high" /><figcaption>Original generated illustration made for Tax Evidence Pack.</figcaption></figure>
+    </section>
+    <section class="problem" aria-labelledby="problem-title"><div><p class="eyebrow">Who it is for</p><h2 id="problem-title">Keep tax evidence beside your ledger</h2></div><p>Import originals, add their tax context, mark missing support, and export a pack for review. It works beside any bookkeeping tool.</p></section>
+    <section id="how" class="steps" aria-labelledby="steps-title"><div><p class="eyebrow">How it works</p><h2 id="steps-title">Prepare a review pack in three steps</h2></div><ol><li><span>01</span><h3>Add original files</h3><p>Add receipts, invoices, PDFs, and reimbursement proof to your encrypted desktop vault.</p></li><li><span>02</span><h3>Add tax context</h3><p>Set the tax year, category, and transaction reference. Mark evidence that has not arrived.</p></li><li><span>03</span><h3>Export for review</h3><p>Create a PDF index and ZIP of original files without sharing your bookkeeping login.</p></li></ol></section>
+    <section class="details" aria-labelledby="details-title"><div class="detail-stamp" aria-hidden="true">✓</div><div><p class="eyebrow">What it does and does not do</p><h2 id="details-title">A binder, not an accounting system</h2><ul><li><b>Stores a local vault</b><span>The installed app encrypts originals and the document register with your passphrase.</span></li><li><b>Keeps originals intact</b><span>Each imported file receives a SHA-256 fingerprint. Exports include the original file bytes.</span></li><li><b>Does not calculate tax</b><span>It has no bank sync, OCR, cloud backup, or tax filing. Keep your own backup.</span></li></ul></div></section>
+    <section id="price" class="pricing" aria-labelledby="price-title"><div><p class="eyebrow">One-time purchase</p><h2 id="price-title">Tax Evidence Pack Plus costs $29 once</h2><p>Plus supports ongoing desktop updates. Core access, accessibility, and evidence export are never locked after purchase changes.</p></div><div class="price-card"><p>Tax Evidence Pack Plus</p><strong>$29 <small>one time</small></strong><a class="button primary" id="buy-link" href="https://api.sociobot.in/api/v1/products/tax-evidence-pack/checkout">Buy Plus</a><button class="restore" id="restore" type="button">Have a license? Restore it</button><div id="license-area" hidden><label for="license-input">Paste your license token</label><input id="license-input" autocomplete="off" /><button class="button secondary" id="save-license" type="button">Restore purchase</button></div><p id="license-status" role="status" aria-live="polite"></p></div></section>
+    <section id="download" class="download-panel" aria-labelledby="download-title"><div><p class="eyebrow">Install the desktop app</p><h2 id="download-title">Download Tax Evidence Pack</h2><p id="download-copy">Checking the latest release…</p></div><div><a class="button primary" id="download-button" href="https://github.com/B-Divyesh/sf-tax-evidence-pack/releases" rel="noopener">View releases</a><ul id="release-assets" class="release-assets" aria-label="Release files" hidden></ul><p class="fine">Builds are unsigned. On macOS, right-click then choose Open. On Windows, compare the checksum before accepting the publisher warning.</p></div></section>
+    <section class="caveat"><p><b>Important:</b> Tax Evidence Pack organizes documents. It is not tax advice and cannot guarantee record-retention compliance in every jurisdiction.</p></section>
   </main>
-  <footer><span>© 2026 Tax Evidence Pack</span><span>Original generated illustration · No telemetry</span><span><a href="/privacy/">Privacy</a> <a href="/terms/">Terms</a></span></footer>
+  <footer class="site-footer"><span>Tax Evidence Pack helps sole traders prepare evidence for review.</span><span><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a><span>Built by Param Factory</span></span><span>Build 0.1.2</span></footer>
   <script type="module" src="/site.ts"></script>
-</body></html>
+</body>
+</html>

@@ -8,12 +8,22 @@ const api = 'https://api.sociobot.in/api/v1/products/tax-evidence-pack';
 const el = <T extends HTMLElement>(id: string) => document.querySelector<T>(`#${id}`)!;
 
 function storedLicense() { return localStorage.getItem(key); }
-function saveLicense(token: string) { localStorage.setItem(key, token.trim()); localStorage.removeItem(`${key}:verdict`); verifyLicense(token.trim()); }
+function saveLicense(token: string) {
+  const value = token.trim();
+  const status = el<HTMLParagraphElement>('license-status');
+  if (!value) { status.textContent = 'Paste a license token, then restore it.'; return; }
+  localStorage.setItem(key, value); localStorage.removeItem(`${key}:verdict`); verifyLicense(value);
+}
 async function verifyLicense(token: string) {
   if (!token) return;
   const status = el<HTMLParagraphElement>('license-status');
   const cached = localStorage.getItem(`${key}:verdict`);
-  if (cached) { const value = JSON.parse(cached); if (Date.now() - value.time < 86_400_000) { status.textContent = value.valid ? 'Plus license active.' : 'License no longer active.'; return; } }
+  if (cached) {
+    try {
+      const value = JSON.parse(cached);
+      if (Date.now() - value.time < 86_400_000) { status.textContent = value.valid ? 'Plus license active.' : 'License no longer active.'; return; }
+    } catch { localStorage.removeItem(`${key}:verdict`); }
+  }
   status.textContent = 'Checking license…';
   try { const response = await fetch(`${api}/verify?license=${encodeURIComponent(token)}`); const verdict = await response.json(); localStorage.setItem(`${key}:verdict`, JSON.stringify({ ...verdict, time: Date.now() })); status.textContent = verdict.valid ? 'Plus license active.' : 'License no longer active — you can purchase a new one below.'; if (!verdict.valid) localStorage.removeItem(key); } catch { status.textContent = 'License saved. Verification will resume when you are online.'; }
 }

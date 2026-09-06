@@ -45,8 +45,9 @@ The landing page uses one original, dithered editorial still: a top-down desk
 with an open evidence binder, receipt strips, a stamped check mark and a paperclip.
 It has no readable text, logos, real people or brands. It is generated with the
 factory image model on 2026-08-28, retained as a PNG source and optimized to WebP
-for delivery. Generated imagery is disclosed in the footer. UI icons are authored
-inline SVG and do not depend on an icon library.
+for delivery. The 1200×630 social preview is a crop of that same original source.
+Generated imagery is disclosed in the footer. UI icons are authored inline SVG and
+do not depend on an icon library.
 
 Prompt sheet:
 
@@ -59,4 +60,3 @@ Prompt sheet:
 > tactile and trustworthy. Composition: landscape, binder on the right with open
 > negative space at left. Constraints: no readable text, no logos, no watermark,
 > no brands, no people, no financial charts, no misleading claims.
-

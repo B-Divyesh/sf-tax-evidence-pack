@@ -5,7 +5,7 @@ use pbkdf2::pbkdf2_hmac;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use std::{fs, io::Write, path::{Path, PathBuf}, sync::Mutex};
+use std::{fs, io::{Cursor, Write}, path::{Path, PathBuf}, sync::Mutex};
 use tauri::{AppHandle, Manager, State};
 use uuid::Uuid;
 use zip::{write::SimpleFileOptions, ZipWriter};
@@ -39,6 +39,46 @@ fn add_missing_evidence(app: AppHandle, state: State<VaultState>, tax_year: Stri
 fn delete_evidence(app: AppHandle, state: State<VaultState>, id: String) -> Result<(), String> { let key = active_key(&state)?; let mut index = read_index(&app, &key)?; if let Some(pos) = index.items.iter().position(|i| i.id == id) { index.items.remove(pos); let file = vault_dir(&app)?.join("files").join(format!("{id}.bin")); if file.exists() { fs::remove_file(file).map_err(|e| e.to_string())?; } write_index(&app, &key, &index)?; } Ok(()) }
 fn pdf_escape(value: &str) -> String { value.replace('\\', "\\\\").replace('(', "\\(").replace(')', "\\)") }
 fn simple_pdf(year: &str, items: &[EvidenceItem]) -> Vec<u8> { let mut lines = vec![format!("Tax Evidence Pack — {} review index", year), "Original files and SHA-256 fingerprints are enclosed in this ZIP.".into(), String::new()]; for item in items { lines.push(format!("{} | {} | {} | {} | {}", item.name, item.category, item.transaction_ref, item.status, item.hash)); } let content = lines.iter().enumerate().map(|(n, x)| format!("BT /F1 {} Tf 48 {} Td ({}) Tj ET", if n == 0 { 16 } else { 9 }, 770i32 - (n as i32 * 15), pdf_escape(x))).collect::<Vec<_>>().join("\n"); let objects = vec!["<< /Type /Catalog /Pages 2 0 R >>".to_string(), "<< /Type /Pages /Kids [3 0 R] /Count 1 >>".to_string(), "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>".to_string(), format!("<< /Length {} >>\nstream\n{}\nendstream", content.len(), content), "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>".to_string()]; let mut bytes = b"%PDF-1.4\n".to_vec(); let mut offsets = vec![0usize]; for (i, object) in objects.iter().enumerate() { offsets.push(bytes.len()); bytes.extend_from_slice(format!("{} 0 obj\n{}\nendobj\n", i + 1, object).as_bytes()); } let xref = bytes.len(); bytes.extend_from_slice(format!("xref\n0 {}\n0000000000 65535 f \n", objects.len() + 1).as_bytes()); for offset in offsets.iter().skip(1) { bytes.extend_from_slice(format!("{:010} 00000 n \n", offset).as_bytes()); } bytes.extend_from_slice(format!("trailer\n<< /Size {} /Root 1 0 R >>\nstartxref\n{}\n%%EOF", objects.len() + 1, xref).as_bytes()); bytes }
+fn review_pack_bytes(year: &str, items: &[EvidenceItem], originals: &[(String, Vec<u8>)]) -> Result<Vec<u8>, String> { let mut zip = ZipWriter::new(Cursor::new(Vec::new())); let options = SimpleFileOptions::default().compression_method(zip::CompressionMethod::Deflated); zip.start_file(format!("Tax Evidence Pack {} index.pdf", year), options).map_err(|e| e.to_string())?; zip.write_all(&simple_pdf(year, items)).map_err(|e| e.to_string())?; for (name, bytes) in originals { zip.start_file(format!("originals/{}", name.replace(['/', '\\'], "_")), options).map_err(|e| e.to_string())?; zip.write_all(bytes).map_err(|e| e.to_string())?; } Ok(zip.finish().map_err(|e| e.to_string())?.into_inner()) }
 #[tauri::command]
-fn export_pack(app: AppHandle, state: State<VaultState>, tax_year: String) -> Result<String, String> { let key = active_key(&state)?; let index = read_index(&app, &key)?; let items: Vec<_> = index.items.into_iter().filter(|i| i.tax_year == tax_year).collect(); let path = rfd::FileDialog::new().set_file_name(format!("tax-evidence-pack-{}.zip", tax_year)).save_file().ok_or("Export cancelled")?; let file = fs::File::create(&path).map_err(|e| e.to_string())?; let mut zip = ZipWriter::new(file); let options = SimpleFileOptions::default().compression_method(zip::CompressionMethod::Deflated); zip.start_file(format!("Tax Evidence Pack {} index.pdf", tax_year), options).map_err(|e| e.to_string())?; zip.write_all(&simple_pdf(&tax_year, &items)).map_err(|e| e.to_string())?; for item in items.iter().filter(|i| i.status == "supported") { let encrypted = fs::read(vault_dir(&app)?.join("files").join(format!("{}.bin", item.id))).map_err(|_| format!("Missing encrypted file for {}", item.name))?; let original = decrypt(&key, &encrypted)?; let safe = item.original_name.replace(['/', '\\'], "_"); zip.start_file(format!("originals/{}-{}", item.id, safe), options).map_err(|e| e.to_string())?; zip.write_all(&original).map_err(|e| e.to_string())?; } zip.finish().map_err(|e| e.to_string())?; Ok(path.display().to_string()) }
+fn export_pack(app: AppHandle, state: State<VaultState>, tax_year: String) -> Result<String, String> { let key = active_key(&state)?; let index = read_index(&app, &key)?; let items: Vec<_> = index.items.into_iter().filter(|i| i.tax_year == tax_year).collect(); let mut originals = Vec::new(); for item in items.iter().filter(|i| i.status == "supported") { let encrypted = fs::read(vault_dir(&app)?.join("files").join(format!("{}.bin", item.id))).map_err(|_| format!("Missing encrypted file for {}", item.name))?; let original = decrypt(&key, &encrypted)?; originals.push((format!("{}-{}", item.id, item.original_name), original)); } let path = rfd::FileDialog::new().set_file_name(format!("tax-evidence-pack-{}.zip", tax_year)).save_file().ok_or("Export cancelled")?; fs::write(&path, review_pack_bytes(&tax_year, &items, &originals)?).map_err(|e| e.to_string())?; Ok(path.display().to_string()) }
 pub fn run() { tauri::Builder::default().manage(VaultState::default()).invoke_handler(tauri::generate_handler![unlock_vault, list_evidence, import_files, add_missing_evidence, delete_evidence, export_pack]).run(tauri::generate_context!()).expect("error while running Tax Evidence Pack"); }
+
+#[cfg(test)]
+mod tests {
+  use super::*;
+  use std::io::Read;
+
+  fn item(status: &str) -> EvidenceItem { EvidenceItem { id: "receipt-1".into(), name: "Luma Rail".into(), original_name: "luma-rail.pdf".into(), hash: "evidence-hash".into(), mime: "application/pdf".into(), size: 16, imported_at: "2026-09-06T00:00:00Z".into(), tax_year: "2025".into(), category: "Travel".into(), transaction_ref: "BANK-1842".into(), status: status.into(), note: String::new() } }
+
+  #[test]
+  fn claim_encrypted_vault_keeps_plaintext_out_of_stored_bytes() {
+    let key = key_from("correct horse battery staple", b"sample-vault-salt");
+    let original = b"Luma Rail receipt total 86.40";
+    let encrypted = encrypt(&key, original).expect("encrypt sample evidence");
+    assert!(!encrypted.windows(original.len()).any(|part| part == original), "ciphertext must not contain original bytes");
+    assert_eq!(decrypt(&key, &encrypted).expect("decrypt sample evidence"), original);
+    assert!(decrypt(&key_from("wrong passphrase", b"sample-vault-salt"), &encrypted).is_err());
+  }
+
+  #[test]
+  fn claim_sha256_fingerprint_matches_imported_bytes() {
+    let original = b"Luma Rail receipt total 86.40";
+    assert_eq!(hex::encode(Sha256::digest(original)), "15baab3c225c99fabbc6fb4b745213e70ced8b86720af2aafe4a39a000f4a616");
+  }
+
+  #[test]
+  fn claim_export_includes_originals_and_review_index() {
+    let supported = item("supported");
+    let missing = item("missing");
+    let bytes = review_pack_bytes("2025", &[supported, missing], &[("receipt-1-luma-rail.pdf".into(), b"original receipt bytes".to_vec())]).expect("build review pack");
+    let mut archive = zip::ZipArchive::new(Cursor::new(bytes)).expect("open review pack");
+    let mut index = String::new();
+    archive.by_name("Tax Evidence Pack 2025 index.pdf").expect("PDF index").read_to_string(&mut index).expect("read PDF bytes");
+    assert!(index.contains("Luma Rail"));
+    assert!(index.contains("evidence-hash"));
+    let mut original = Vec::new();
+    archive.by_name("originals/receipt-1-luma-rail.pdf").expect("original file").read_to_end(&mut original).expect("read original bytes");
+    assert_eq!(original, b"original receipt bytes");
+  }
+}
