@@ -37,7 +37,7 @@ jobs:
           - os: macos-14
             target: aarch64-apple-darwin
             label: macos-arm64
-          - os: macos-14
+          - os: macos-13
             target: x86_64-apple-darwin
             label: macos-x64
           - os: windows-latest
