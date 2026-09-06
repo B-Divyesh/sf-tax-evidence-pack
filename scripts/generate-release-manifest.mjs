@@ -1,5 +1,5 @@
 import { mkdir, writeFile } from 'node:fs/promises';
-import { dirname } from 'node:path';
+import { basename, dirname } from 'node:path';
 
 const repository = 'B-Divyesh/sf-tax-evidence-pack';
 const releasePage = `https://github.com/${repository}/releases`;
@@ -8,7 +8,7 @@ const apiUrl = process.env.RELEASE_MANIFEST_API_URL ?? `https://api.github.com/r
 const emptyPlatforms = () => Object.fromEntries(['macos', 'windows', 'linux'].map((name) => [name, { label: name === 'macos' ? 'macOS' : name === 'windows' ? 'Windows' : 'Linux', signed: false, artifacts: [] }]));
 function fallback(reason) { return { schema: 1, published: false, version: null, release_url: releasePage, generated_at: new Date().toISOString(), reason, platforms: emptyPlatforms() }; }
 function platformFor(name) { const value = name.toLowerCase(); if (value.endsWith('.dmg')) return 'macos'; if (value.endsWith('.msi') || value.endsWith('.exe')) return 'windows'; if (value.endsWith('.appimage') || value.endsWith('.deb')) return 'linux'; return null; }
-function parseSums(text) { const sums = new Map(); for (const line of text.split('\n')) { const match = line.match(/^([a-fA-F0-9]{64})\s+[* ](.+)$/); if (match) sums.set(match[2], match[1].toLowerCase()); } return sums; }
+function parseSums(text) { const sums = new Map(); for (const line of text.split('\n')) { const match = line.match(/^([a-fA-F0-9]{64})\s+[* ](.+)$/); if (match) sums.set(basename(match[2]), match[1].toLowerCase()); } return sums; }
 async function fetchJson(url) { const response = await fetch(url, { headers: { Accept: 'application/vnd.github+json', 'User-Agent': 'tax-evidence-pack-site-build' }, signal: AbortSignal.timeout(12_000) }); if (!response.ok) throw new Error(`release API returned ${response.status}`); return response.json(); }
 async function createManifest() {
   try {
